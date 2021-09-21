@@ -13,8 +13,6 @@ import api from '../../services/api'
 import DataCepType from '../../types/DataCepType'
 import { CepContext } from '../../contexts/CepContext'
 import { cepIsValid } from '../../utils/cepIsValid'
-import { handleEmptyData } from '../../utils/handleEmptyData'
-
 
 function Header() {
   const [cep, setCep] = useState('')
@@ -24,21 +22,26 @@ function Header() {
     event.preventDefault()
 
     if (!cepIsValid(cep)) {
-      alert('Por favor, insira o CEP com 8 dígitos (números)')
+      alert('Por favor, insira o CEP com 8 dígitos (somente números)')
     } else {
-      const responseApi: DataCepType = await api
-        .get(`${cep}/json/unicode`)
-        .then((response) => response.data)
+      let dataCepApi: DataCepType = {}
 
-      // Caso a API não encontre o CEP buscado, ira retornar um objeto { erro: true }
-      if (responseApi?.erro) {
-        alert(`CEP ${cep} não encontrado`)
-      } else {
-        const formattedResponseApi: DataCepType = handleEmptyData(responseApi)
+      try {
+        const responseApi = await api
+          .get(`cep/${cep}`)
 
-        updateDataCep(formattedResponseApi)
+        dataCepApi = responseApi.data
+
+        // Caso a API não encontre o CEP buscado, ira retornar um objeto { erro: true }
+        if (dataCepApi?.erro) {
+          alert(`CEP ${cep} não encontrado`)
+        } else {
+          updateDataCep(dataCepApi)
+        }
+      } catch {
+        alert('Erro ao realizar consulta de CEP')
+        console.error('Erro ao consultar a API')
       }
-
     }
   }
 
